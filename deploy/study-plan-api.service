@@ -1,0 +1,20 @@
+[Unit]
+Description=Study Plan API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/study-plan-api
+Environment=STUDY_PLAN_API_HOST=127.0.0.1
+Environment=STUDY_PLAN_API_PORT=5000
+Environment=STUDY_PLAN_DB_PATH=/var/lib/study-plan/study_plan.db
+Environment=UV_NO_PROGRESS=1
+ExecStart=/home/deploy/.local/bin/uv run --locked --no-sync server.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

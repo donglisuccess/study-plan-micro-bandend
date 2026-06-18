@@ -1,1 +1,0 @@
-# This MVP backend only uses the Python standard library.

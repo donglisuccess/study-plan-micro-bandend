@@ -1,9 +1,12 @@
 # 暑假学习计划助手后端
 
-## 启动
+## 本地启动
+
+项目使用 `uv` 管理 Python 版本、虚拟环境和依赖。
 
 ```powershell
-python server.py
+uv sync --locked
+uv run --locked server.py
 ```
 
 服务默认监听 `http://127.0.0.1:5000`。
@@ -20,3 +23,55 @@ python server.py
 - `STUDY_PLAN_API_HOST`
 - `STUDY_PLAN_API_PORT`
 - `STUDY_PLAN_DB_PATH`
+
+## 服务器安装 uv
+
+使用 `deploy` 用户登录服务器后执行：
+
+```bash
+curl -LsSf https://astral.sh/uv/0.11.21/install.sh | sh
+/home/deploy/.local/bin/uv --version
+```
+
+## systemd 服务
+
+将仓库中的服务文件安装到 systemd：
+
+```bash
+cd /opt/study-plan-api
+/home/deploy/.local/bin/uv sync --locked
+sudo cp deploy/study-plan-api.service /etc/systemd/system/study-plan-api.service
+sudo systemctl daemon-reload
+sudo systemctl enable study-plan-api
+sudo systemctl start study-plan-api
+```
+
+服务启动命令为：
+
+```bash
+/home/deploy/.local/bin/uv run --locked --no-sync server.py
+```
+
+部署流程会先执行 `uv sync --locked`，因此 systemd 重启时只使用已经同步好的环境。
+
+## GitHub Actions 自动部署
+
+`.github/workflows/deploy.yml` 会在代码推送到 `main` 后：
+
+1. 检查 `uv.lock` 是否与 `pyproject.toml` 一致。
+2. 通过 SSH 将代码同步到服务器。
+3. 在服务器执行 `uv sync --locked`。
+4. 重启 `study-plan-api`。
+5. 请求 `/health` 验证部署。
+
+GitHub 仓库需要配置以下 Secrets：
+
+- `SERVER_HOST`
+- `SERVER_USER`，填写 `deploy`
+- `SERVER_SSH_KEY`
+- `SERVER_KNOWN_HOSTS`
+
+还需要配置以下 Variables：
+
+- `SERVER_PORT`，默认可填写 `22`
+- `DEPLOY_PATH`，默认可填写 `/opt/study-plan-api`

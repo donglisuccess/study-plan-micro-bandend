@@ -1,0 +1,10 @@
+[project]
+name = "study-plan-micro-backend"
+version = "0.1.0"
+description = "Backend API for the summer study plan mini program"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = []
+
+[tool.uv]
+package = false
