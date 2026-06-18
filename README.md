@@ -13,7 +13,7 @@ uv run --locked server.py
 
 ## 接口
 
-- `GET /health`
+- `GET /api/health`
 - `GET /api/basic-options`
 
 首次启动时会自动创建 `data/study_plan.db`，并写入首页全部选项。
@@ -62,7 +62,7 @@ sudo systemctl start study-plan-api
 2. 通过 SSH 将代码同步到服务器。
 3. 在服务器执行 `uv sync --locked`。
 4. 重启 `study-plan-api`。
-5. 请求 `/health` 验证部署。
+5. 请求 `/api/health` 验证部署。
 
 GitHub 仓库需要配置以下 Secrets：
 

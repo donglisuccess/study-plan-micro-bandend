@@ -14,7 +14,7 @@ class ApiHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
 
-        if path == "/health":
+        if path == "/api/health":
             self.send_json(200, {"code": 0, "message": "ok"})
             return
 
