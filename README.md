@@ -54,6 +54,24 @@ sudo systemctl start study-plan-api
 
 部署流程会先执行 `uv sync --locked`，因此 systemd 重启时只使用已经同步好的环境。
 
+为避免 GitHub Actions 等待 sudo 密码，需要由 root 创建最小化免密规则。先确认 systemctl 路径：
+
+```bash
+command -v systemctl
+```
+
+如果输出是 `/usr/bin/systemctl`，执行：
+
+```bash
+echo 'deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart study-plan-api' \
+  | sudo tee /etc/sudoers.d/study-plan-deploy
+sudo chmod 440 /etc/sudoers.d/study-plan-deploy
+sudo visudo -cf /etc/sudoers.d/study-plan-deploy
+sudo -u deploy sudo -n /usr/bin/systemctl restart study-plan-api
+```
+
+如果 `command -v systemctl` 返回其他路径，请在 sudoers 规则中使用实际的绝对路径。
+
 ## GitHub Actions 自动部署
 
 `.github/workflows/deploy.yml` 会在代码推送到 `main` 后：
