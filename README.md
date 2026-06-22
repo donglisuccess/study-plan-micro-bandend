@@ -15,6 +15,22 @@ uv run --locked server.py
 
 - `GET /api/health`
 - `GET /api/basic-options`
+- `POST /api/study-plans/generate`
+
+生成计划请求示例：
+
+```json
+{
+  "grade": "初一",
+  "subject": "数学",
+  "level": "基础较弱",
+  "goal": "补基础 + 预习",
+  "days": "30 天",
+  "dailyTime": "1 小时"
+}
+```
+
+接口会根据年级、学科、当前基础、学习目标和每日时长组合每日任务，并将生成结果保存到 SQLite 的 `generated_plans` 表中。
 
 首次启动时会自动创建 `data/study_plan.db`，并写入首页全部选项。
 

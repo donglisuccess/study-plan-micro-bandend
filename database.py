@@ -1,4 +1,5 @@
 import os
+import json
 import sqlite3
 from pathlib import Path
 
@@ -47,6 +48,21 @@ def initialize_database():
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS generated_plans (
+                id TEXT PRIMARY KEY,
+                grade TEXT NOT NULL,
+                subject TEXT NOT NULL,
+                level TEXT NOT NULL,
+                goal TEXT NOT NULL,
+                days INTEGER NOT NULL,
+                daily_time TEXT NOT NULL,
+                plan_json TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
 
         for category, values in OPTION_SEEDS.items():
             for sort_order, value in enumerate(values):
@@ -92,3 +108,32 @@ def get_basic_options():
 
     result["defaults"] = defaults
     return result
+
+
+def save_generated_plan(plan):
+    with get_connection() as connection:
+        connection.execute(
+            """
+            INSERT INTO generated_plans (
+                id,
+                grade,
+                subject,
+                level,
+                goal,
+                days,
+                daily_time,
+                plan_json
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                plan["id"],
+                plan["grade"],
+                plan["subject"],
+                plan["level"],
+                plan["goal"],
+                plan["days"],
+                plan["dailyTime"],
+                json.dumps(plan, ensure_ascii=False),
+            ),
+        )

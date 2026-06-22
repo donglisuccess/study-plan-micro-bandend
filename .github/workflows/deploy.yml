@@ -30,6 +30,9 @@ jobs:
       - name: Check lockfile
         run: uv lock --check
 
+      - name: Test backend
+        run: uv run --locked python -m unittest discover -s tests
+
       - name: Configure SSH
         env:
           SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
