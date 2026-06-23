@@ -1,6 +1,9 @@
 import os
 import json
 import sqlite3
+import uuid
+from contextlib import contextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -25,11 +28,19 @@ DEFAULT_OPTIONS = {
 }
 
 
+@contextmanager
 def get_connection():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
-    return connection
+    try:
+        yield connection
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
 
 
 def initialize_database():
@@ -61,6 +72,31 @@ def initialize_database():
                 plan_json TEXT NOT NULL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
+            """
+        )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS plan_feedbacks (
+                id TEXT PRIMARY KEY,
+                plan_id TEXT NOT NULL,
+                options_json TEXT NOT NULL,
+                feedback_text TEXT NOT NULL DEFAULT '',
+                client_created_at INTEGER,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(plan_id) REFERENCES generated_plans(id)
+            )
+            """
+        )
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_plan_feedbacks_plan_id
+            ON plan_feedbacks(plan_id)
+            """
+        )
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_plan_feedbacks_created_at
+            ON plan_feedbacks(created_at)
             """
         )
 
@@ -137,3 +173,44 @@ def save_generated_plan(plan):
                 json.dumps(plan, ensure_ascii=False),
             ),
         )
+
+
+def save_plan_feedback(plan_id, options, text, client_created_at=None):
+    feedback_id = uuid.uuid4().hex
+    created_at = datetime.now(timezone.utc).isoformat()
+
+    with get_connection() as connection:
+        plan_exists = connection.execute(
+            "SELECT 1 FROM generated_plans WHERE id = ?",
+            (plan_id,),
+        ).fetchone()
+        if not plan_exists:
+            raise LookupError("计划不存在或已失效")
+
+        connection.execute(
+            """
+            INSERT INTO plan_feedbacks (
+                id,
+                plan_id,
+                options_json,
+                feedback_text,
+                client_created_at,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                feedback_id,
+                plan_id,
+                json.dumps(options, ensure_ascii=False),
+                text,
+                client_created_at,
+                created_at,
+            ),
+        )
+
+    return {
+        "id": feedback_id,
+        "planId": plan_id,
+        "createdAt": created_at,
+    }

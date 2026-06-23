@@ -16,6 +16,7 @@ uv run --locked server.py
 - `GET /api/health`
 - `GET /api/basic-options`
 - `POST /api/study-plans/generate`
+- `POST /api/study-plans/feedback`
 
 生成计划请求示例：
 
@@ -31,6 +32,19 @@ uv run --locked server.py
 ```
 
 接口会根据年级、学科、当前基础、学习目标和每日时长组合每日任务，并将生成结果保存到 SQLite 的 `generated_plans` 表中。
+
+计划反馈请求示例：
+
+```json
+{
+  "planId": "plan-id",
+  "options": ["有帮助", "想要更详细"],
+  "text": "希望增加一些练习题",
+  "createdAt": 1750000000000
+}
+```
+
+反馈会保存到 SQLite 的 `plan_feedbacks` 表中。反馈标签与补充文字至少填写一项。
 
 首次启动时会自动创建 `data/study_plan.db`，并写入首页全部选项。
 
